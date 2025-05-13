@@ -399,7 +399,7 @@ func AdimSil(c *gin.Context) {
 		liste := yapilacakListeler[i]
 		listKullanici := strings.Split(liste.Isim, " ")
 		if liste.ID == data.ListeID {
-			for j := 0; j < len(liste.Adimlar); i++ {
+			for j := 0; j < len(liste.Adimlar); j++ {
 				adim := liste.Adimlar[j]
 				if adim.ID == data.ID {
 					//Adminse direkt silme, User1 ise Listenin User1 listesi olduğu kontrol edip silme
