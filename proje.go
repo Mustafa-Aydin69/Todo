@@ -15,6 +15,53 @@ var Kullanicilar = map[string]string{
 	"admin": "admin",
 }
 
+// YapilacakAdim (Adım)
+type YapilacakAdim struct {
+	ID               int
+	ListeID          int
+	Icerik           string
+	TamamlandiMi     bool
+	OlusTarihi       time.Time
+	GuncellemeTarihi time.Time
+	SilinmeTarihi    *time.Time
+}
+
+// YapilacakListe (Liste)
+type YapilacakListe struct {
+	ID                int
+	Isim              string
+	OlusTarihi        time.Time
+	GuncellemeTarihi  time.Time
+	SilinmeTarihi     *time.Time
+	TamamlanmaYuzdesi float64
+	Adimlar           []YapilacakAdim
+}
+
+// Veri Tabanı zorunlu olmadığı için veriyi RAM'de tutuyorum
+var yapilacakListeler = []YapilacakListe{
+	{
+		ID:               1,
+		Isim:             "user1 Alinacaklar Listesi",
+		OlusTarihi:       time.Now(),
+		GuncellemeTarihi: time.Now(),
+		Adimlar: []YapilacakAdim{
+			{ID: 1, ListeID: 1, Icerik: "Ekmek al", TamamlandiMi: false, OlusTarihi: time.Now(), GuncellemeTarihi: time.Now()},
+			{ID: 2, ListeID: 1, Icerik: "Süt al", TamamlandiMi: true, OlusTarihi: time.Now(), GuncellemeTarihi: time.Now()},
+			{ID: 3, ListeID: 1, Icerik: "Şeker al", TamamlandiMi: false, OlusTarihi: time.Now(), GuncellemeTarihi: time.Now()},
+		},
+	},
+	{
+		ID:               2,
+		Isim:             "admin Yapilacaklar Listesi",
+		OlusTarihi:       time.Now(),
+		GuncellemeTarihi: time.Now(),
+		Adimlar: []YapilacakAdim{
+			{ID: 1, ListeID: 2, Icerik: "Projeyi bitir", TamamlandiMi: false, OlusTarihi: time.Now(), GuncellemeTarihi: time.Now()},
+			{ID: 2, ListeID: 2, Icerik: "Toplantiya katil", TamamlandiMi: true, OlusTarihi: time.Now(), GuncellemeTarihi: time.Now()},
+		},
+	},
+}
+
 func TokenOlustur(username, userType string) (string, error) {
 	claims := &MyClaims{
 		Username: username,
