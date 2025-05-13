@@ -1,6 +1,7 @@
 package main
 
 import (
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -116,6 +117,42 @@ type MyClaims struct {
 	jwt.RegisteredClaims
 }
 
+// Token doğrulama
+func Dogrulama() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		//Authorization başlığından tokeni alır
+		authHeader := c.GetHeader("Authorization")
+		if authHeader == "" {
+			c.JSON(401, gin.H{"error": "Token bulunamadi"})
+			c.Abort()
+			return
+		}
+		//Doğrulama kısmına tokeni Bearer'den ayırma tokenString değişkenine atar
+		hmm := strings.Split(authHeader, " ")
+		tokenString := hmm[1]
+		//token çözümleme ve doğrulama işlemi
+		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+			return Token, nil
+		})
+		//token geçersizse kullanıcıya hata döndürme
+		if err != nil || !token.Valid {
+			c.JSON(401, gin.H{"error": "Geçersiz token"})
+			c.Abort()
+			return
+		}
+		//claims ile kullanıcının bilgilerini alma admin mi user1 mi
+		claims, ok := token.Claims.(jwt.MapClaims)
+		if !ok {
+			c.JSON(401, gin.H{"error": "Token bilgileri okunamadı"})
+			c.Abort()
+			return
+		}
+		//bunu değişkenlere atama
+		c.Set("username", claims["sub"])
+		c.Set("user_type", claims["user_type"])
+		c.Next()
+	}
+}
 func main() {
 	r := gin.Default()
 	r.POST("/login", Giris)
