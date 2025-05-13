@@ -153,9 +153,86 @@ func Dogrulama() gin.HandlerFunc {
 		c.Next()
 	}
 }
+
+// Bütün todosları getirme(kullanıcıya göre)
+func GetTodos(c *gin.Context) {
+	//Doğrulama fonksiyonundaki kullanıcı bilgilerini değişkene atama
+	username := c.GetString("username")
+	userType := c.GetString("user_type")
+	var aktifListeler []YapilacakListe
+
+	// Eğer admin ise tüm listeyi görsün, user1 ise sadece kendi listelerini görsün
+	if userType == "admin" {
+		// Admin, tüm listeyi görebilir
+		for i := 0; i < len(yapilacakListeler); i++ {
+			liste := yapilacakListeler[i]
+			if liste.SilinmeTarihi == nil {
+				// Tamamlanma yüzdesini hesapla
+				var aktifAdimlar []YapilacakAdim
+				//Yüzde hesaplama için tamamlanmış adımları alma
+				var TamamlanmisAdimlar int
+				for j := 0; j < len(liste.Adimlar); j++ {
+					adim := liste.Adimlar[j]
+					if adim.TamamlandiMi {
+						TamamlanmisAdimlar++
+					}
+					if adim.SilinmeTarihi == nil {
+						aktifAdimlar = append(aktifAdimlar, adim)
+					}
+				}
+
+				// Yüzdeyi hesapla, eğer adım yoksa sıfır kabul et
+				if len(liste.Adimlar) > 0 {
+					liste.TamamlanmaYuzdesi = float64(TamamlanmisAdimlar) / float64(len(liste.Adimlar)) * 100
+				} else {
+					liste.TamamlanmaYuzdesi = 0
+				}
+				liste.Adimlar = aktifAdimlar
+				aktifListeler = append(aktifListeler, liste)
+			}
+		}
+	} else {
+		// User1 sadece kendi listelerini görebilir
+		for i := 0; i < len(yapilacakListeler); i++ {
+			liste := yapilacakListeler[i]
+			//Liste ismini boşluklara göre ayırma
+			listKullanici := strings.Split(liste.Isim, " ")
+			if listKullanici[0] == username && liste.SilinmeTarihi == nil {
+				// Tamamlanma yüzdesini hesapla
+				var aktifAdimlar []YapilacakAdim
+				var TamamlanmisAdimlar int
+				for j := 0; j < len(liste.Adimlar); j++ {
+					adim := liste.Adimlar[j]
+					if adim.TamamlandiMi {
+						TamamlanmisAdimlar++
+					}
+					if adim.SilinmeTarihi == nil {
+						aktifAdimlar = append(aktifAdimlar, adim)
+					}
+				}
+
+				// Yüzdeyi hesapla, eğer adım yoksa sıfır kabul et
+				if len(liste.Adimlar) > 0 {
+					liste.TamamlanmaYuzdesi = float64(TamamlanmisAdimlar) / float64(len(liste.Adimlar)) * 100
+				} else {
+					liste.TamamlanmaYuzdesi = 0
+				}
+				liste.Adimlar = aktifAdimlar
+				aktifListeler = append(aktifListeler, liste)
+			}
+		}
+	}
+
+	c.JSON(200, gin.H{"kullanici": username, "listeler": aktifListeler})
+}
 func main() {
 	r := gin.Default()
 	r.POST("/login", Giris)
+
+	// Korumalı alan
+	protected := r.Group("/")
+	protected.Use(Dogrulama())
+	protected.GET("/todos", GetTodos)
 
 	r.Run()
 }
