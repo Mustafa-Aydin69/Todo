@@ -225,6 +225,32 @@ func GetTodos(c *gin.Context) {
 
 	c.JSON(200, gin.H{"kullanici": username, "listeler": aktifListeler})
 }
+
+// Liste ekleme
+func ListeEkle(c *gin.Context) {
+	username := c.GetString("username")
+	var listeIsmi string
+	var liste YapilacakListe
+	if err := c.BindJSON(&listeIsmi); err != nil {
+		c.JSON(400, gin.H{"error": "Geçersiz veri"})
+		return
+	}
+	//Burada listeyi kim oluşturuyorsa listenin başına onun userType'nı ekliyoruz ki liste sıralamada kolaylık sağlasın
+	if username == "admin" {
+		liste.Isim = "admin " + listeIsmi
+	} else if username == "user1" {
+		liste.Isim = "user1 " + listeIsmi
+	}
+	//ID, oluşturma tarihi ve Güncelleme tarihini atama
+	liste.ID = len(yapilacakListeler) + 1
+	liste.OlusTarihi = time.Now()
+	liste.GuncellemeTarihi = time.Now()
+
+	yapilacakListeler = append(yapilacakListeler, liste)
+
+	c.JSON(201, gin.H{"message": "Liste başariyla eklendi", "liste": liste})
+
+}
 func main() {
 	r := gin.Default()
 	r.POST("/login", Giris)
@@ -233,6 +259,6 @@ func main() {
 	protected := r.Group("/")
 	protected.Use(Dogrulama())
 	protected.GET("/todos", GetTodos)
-
+	protected.POST("/lists", ListeEkle)
 	r.Run()
 }
