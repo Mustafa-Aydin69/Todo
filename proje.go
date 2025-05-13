@@ -380,6 +380,47 @@ func AdimEkle(c *gin.Context) {
 	}
 	c.JSON(404, gin.H{"error": "Liste bulunamadi"})
 }
+
+// Listeden adim silme
+func AdimSil(c *gin.Context) {
+	username := c.GetString("username")
+	zaman := time.Now()
+	//Silinecek adımın Idsi ve Listenin Idsini alma
+	var data struct {
+		ID      int `json:"ID"`
+		ListeID int `json:"ListeID"`
+	}
+	if err := c.BindJSON(&data); err != nil {
+		c.JSON(400, gin.H{"error": "Geçersiz veri"})
+		return
+	}
+
+	for i := 0; i < len(yapilacakListeler); i++ {
+		liste := yapilacakListeler[i]
+		listKullanici := strings.Split(liste.Isim, " ")
+		if liste.ID == data.ListeID {
+			for j := 0; j < len(liste.Adimlar); i++ {
+				adim := liste.Adimlar[j]
+				if adim.ID == data.ID {
+					//Adminse direkt silme, User1 ise Listenin User1 listesi olduğu kontrol edip silme
+					if username == "admin" || username == listKullanici[0] {
+						liste.Adimlar[j].SilinmeTarihi = &zaman
+						yapilacakListeler[i] = liste
+						c.JSON(200, gin.H{"message": "Adim başariyla silindi"})
+						return
+						//Kullanıcı user1 ve Liste admin listesiyse hata döndürme
+					} else {
+						c.JSON(403, gin.H{"error": "Bu adimi silmeye yetkiniz yok"})
+						return
+					}
+				}
+			}
+			c.JSON(404, gin.H{"error": "Adim bulunamadi"})
+			return
+		}
+	}
+	c.JSON(404, gin.H{"error": "Liste bulunamadi"})
+}
 func main() {
 	r := gin.Default()
 	r.POST("/login", Giris)
@@ -392,5 +433,6 @@ func main() {
 	protected.DELETE("/lists", ListeSil)
 	protected.PUT("/lists", ListeGünc)
 	protected.POST("/steps", AdimEkle)
+	protected.DELETE("/steps", AdimSil)
 	r.Run()
 }
