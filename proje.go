@@ -251,6 +251,40 @@ func ListeEkle(c *gin.Context) {
 	c.JSON(201, gin.H{"message": "Liste başariyla eklendi", "liste": liste})
 
 }
+
+// liste silme
+func ListeSil(c *gin.Context) {
+	username := c.GetString("username")
+	var ID int
+	if err := c.BindJSON(&ID); err != nil {
+		c.JSON(400, gin.H{"error": "Geçersiz veri"})
+		return
+	}
+	zaman := time.Now()
+	for i := 0; i < len(yapilacakListeler); i++ {
+		liste := yapilacakListeler[i]
+		listKullanici := strings.Split(liste.Isim, " ")
+
+		if liste.ID == ID {
+			//Kullanıcı admin ise listeyi silsin
+			if username == "admin" {
+				yapilacakListeler[i].SilinmeTarihi = &zaman
+				c.JSON(200, gin.H{"message": "Liste başariyla silindi"})
+				return
+				//kullanıcı user1 ise ve liste user 1 listesi ise silsin
+			} else if username == listKullanici[0] {
+				yapilacakListeler[i].SilinmeTarihi = &zaman
+				c.JSON(200, gin.H{"message": "Liste başariyla silindi"})
+				return
+				//kullanıcı user1 ise ve liste admin listesiyse silemesin
+			} else {
+				c.JSON(403, gin.H{"error": "Bu listeyi silmeye yetkiniz yok"})
+				return
+			}
+		}
+	}
+	c.JSON(404, gin.H{"error": "Liste bulunamadı"})
+}
 func main() {
 	r := gin.Default()
 	r.POST("/login", Giris)
@@ -260,5 +294,6 @@ func main() {
 	protected.Use(Dogrulama())
 	protected.GET("/todos", GetTodos)
 	protected.POST("/lists", ListeEkle)
+	protected.DELETE("/lists", ListeSil)
 	r.Run()
 }
