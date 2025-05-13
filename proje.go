@@ -324,6 +324,62 @@ func ListeGünc(c *gin.Context) {
 	c.JSON(404, gin.H{"error": "Liste bulunamadi"})
 
 }
+
+// Listeye adım ekleme
+func AdimEkle(c *gin.Context) {
+	username := c.GetString("username")
+	zaman := time.Now()
+	//JSON üzerinden değiştilecek adım eklenecek listenin ID'sini ve içeriğini al
+	var adimekleme struct {
+		ListeID int    `json:"ListeID"`
+		Icerik  string `json:"Icerik"`
+	}
+	if err := c.BindJSON(&adimekleme); err != nil {
+		c.JSON(400, gin.H{"error": "Geçersiz veri"})
+		return
+	}
+	for i := 0; i < len(yapilacakListeler); i++ {
+		liste := yapilacakListeler[i]
+		listKullanici := strings.Split(liste.Isim, " ")
+		if liste.ID == adimekleme.ListeID {
+			//Kullanıcı Admin ise liste ID'si ne ise ona göre adım ekleme yapma
+			if username == "admin" {
+				yeniAdim := YapilacakAdim{
+					ID:               len(liste.Adimlar) + 1, // Yeni adım ID'si
+					Icerik:           adimekleme.Icerik,
+					ListeID:          adimekleme.ListeID,
+					TamamlandiMi:     false,
+					OlusTarihi:       zaman,
+					GuncellemeTarihi: zaman,
+				}
+				liste.Adimlar = append(liste.Adimlar, yeniAdim)
+				yapilacakListeler[i] = liste
+				c.JSON(201, gin.H{"message": "Adım başarıyla eklendi", "adim": yeniAdim})
+				return
+				//Kullanıcı user1 ise ve Listede user1 listesiyse ekleme yapma
+			} else if username == listKullanici[0] {
+				yeniAdim := YapilacakAdim{
+					ID:               len(liste.Adimlar) + 1, // Yeni adım ID'si
+					Icerik:           adimekleme.Icerik,
+					ListeID:          adimekleme.ListeID,
+					TamamlandiMi:     false,
+					OlusTarihi:       zaman,
+					GuncellemeTarihi: zaman,
+				}
+				liste.Adimlar = append(liste.Adimlar, yeniAdim)
+				yapilacakListeler[i] = liste
+				c.JSON(201, gin.H{"message": "Adım başarıyla eklendi", "adim": yeniAdim})
+				return
+				//Kullanıcı user1 ve Liste admin listesiyse hata döndürme
+			} else {
+				c.JSON(403, gin.H{"error": "Bu listeye adım eklemeye yetkiniz yok"})
+				return
+			}
+
+		}
+	}
+	c.JSON(404, gin.H{"error": "Liste bulunamadi"})
+}
 func main() {
 	r := gin.Default()
 	r.POST("/login", Giris)
@@ -335,5 +391,6 @@ func main() {
 	protected.POST("/lists", ListeEkle)
 	protected.DELETE("/lists", ListeSil)
 	protected.PUT("/lists", ListeGünc)
+	protected.POST("/steps", AdimEkle)
 	r.Run()
 }
