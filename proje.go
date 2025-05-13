@@ -285,6 +285,45 @@ func ListeSil(c *gin.Context) {
 	}
 	c.JSON(404, gin.H{"error": "Liste bulunamadı"})
 }
+
+// liste isim güncelleme
+func ListeGünc(c *gin.Context) {
+	username := c.GetString("username")
+	//JSON üzerinden değiştilecek listenin ID'sini ve Yeni ismi al
+	var data struct {
+		ID   int    `json:"ID"`
+		Isim string `json:"Isim"`
+	}
+	if err := c.BindJSON(&data); err != nil {
+		c.JSON(400, gin.H{"error": "Geçersiz veri"})
+		return
+	}
+
+	for i := 0; i < len(yapilacakListeler); i++ {
+		liste := yapilacakListeler[i]
+		listKullanici := strings.Split(liste.Isim, " ")
+		if liste.ID == data.ID {
+			//Kullanıcı ne ise ona göre güncelleme yapma
+			if username == "admin" || username == listKullanici[0] {
+				if username == "admin" {
+					liste.Isim = "admin" + " " + data.Isim
+				} else if username == "user1" {
+					liste.Isim = "user1" + " " + data.Isim
+				}
+				liste.GuncellemeTarihi = time.Now()
+				yapilacakListeler[i] = liste
+				c.JSON(200, gin.H{"message": "Liste başarıyla güncellendi", "Liste": gin.H{"ID": yapilacakListeler[i].ID, "Isim": yapilacakListeler[i].Isim}})
+				return
+				//Kullanıcı user1 ise ve Liste IDsi admin listesiyse hata döndürsün
+			} else {
+				c.JSON(403, gin.H{"error": "Bu Listeyi güncellemeye yetkiniz yok"})
+				return
+			}
+		}
+	}
+	c.JSON(404, gin.H{"error": "Liste bulunamadi"})
+
+}
 func main() {
 	r := gin.Default()
 	r.POST("/login", Giris)
@@ -295,5 +334,6 @@ func main() {
 	protected.GET("/todos", GetTodos)
 	protected.POST("/lists", ListeEkle)
 	protected.DELETE("/lists", ListeSil)
+	protected.PUT("/lists", ListeGünc)
 	r.Run()
 }
