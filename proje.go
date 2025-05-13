@@ -421,6 +421,52 @@ func AdimSil(c *gin.Context) {
 	}
 	c.JSON(404, gin.H{"error": "Liste bulunamadi"})
 }
+
+// Listedeki Adımi güncelleme
+func AdimGünc(c *gin.Context) {
+	username := c.GetString("username")
+	//Güncellenecek değerleri alma
+	var data struct {
+		ID           int    `json:"ID"`
+		ListeID      int    `json:"ListeID"`
+		Icerik       string `json:"Icerik"`
+		TamamlandiMi bool   `json:"TamamlandiMi"`
+	}
+	if err := c.BindJSON(&data); err != nil {
+		c.JSON(400, gin.H{"error": "Geçersiz veri"})
+		return
+	}
+	for i := 0; i < len(yapilacakListeler); i++ {
+		liste := yapilacakListeler[i]
+		listKullanici := strings.Split(liste.Isim, " ")
+		if liste.ID == data.ListeID {
+			for j := 0; j < len(liste.Adimlar); j++ {
+				adim := liste.Adimlar[j]
+				if adim.ID == data.ID {
+					//Adminse direkt güncelleme, User1 ise Listenin User1 listesi olup olmadığını kontrol etme
+					if username == "admin" || username == listKullanici[0] {
+						liste.Adimlar[j].Icerik = data.Icerik
+						liste.Adimlar[j].TamamlandiMi = data.TamamlandiMi
+						liste.Adimlar[j].GuncellemeTarihi = time.Now()
+
+						yapilacakListeler[i] = liste
+
+						c.JSON(200, gin.H{"message": "Adım başarıyla güncellendi", "adim": liste.Adimlar[j]})
+						return
+						//Kullanıcı user1 ve Liste admin listesiyse hata döndürme
+					} else {
+						c.JSON(403, gin.H{"error": "Bu adimi güncellemeye yetkiniz yok"})
+						return
+					}
+
+				}
+			}
+			c.JSON(404, gin.H{"error": "Adim bulunamadi"})
+			return
+		}
+	}
+	c.JSON(404, gin.H{"error": "Liste bulunamadi"})
+}
 func main() {
 	r := gin.Default()
 	r.POST("/login", Giris)
@@ -434,5 +480,6 @@ func main() {
 	protected.PUT("/lists", ListeGünc)
 	protected.POST("/steps", AdimEkle)
 	protected.DELETE("/steps", AdimSil)
+	protected.PUT("/steps", AdimGünc)
 	r.Run()
 }
