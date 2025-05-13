@@ -3,7 +3,8 @@
 Bu proje, kullanıcıların görevlerini takip edebilmeleri için bir **REST API** sağlar. Kullanıcılar, görev listelerini oluşturabilir, silebilir ve güncelleyebilir. Aynı şekilde her listeye adımlar ekleyebilir, silebilir veya güncelleyebilirler. API, güvenlik amacıyla **JSON Web Token (JWT)** kullanır, böylece yalnızca geçerli bir token ile korunmuş işlemler yapılabilir.
 
 ## Özellikler
-
+## 🌐 Canlı Yayın Linki
+[https://todoapp-3s7x.onrender.com](https://todoapp-3s7x.onrender.com)
 - **Kullanıcı Girişi**: Kullanıcı adı ve şifre ile giriş yapılır. Başarılı giriş sonrası bir **token** verilir.
 - **Görev Listesi Yönetimi**: Görev listeleri oluşturulabilir, güncellenebilir veya silinebilir.
 - **Adım Yönetimi**: Her görev listesine adımlar eklenebilir, güncellenebilir veya silinebilir.
